@@ -218,8 +218,8 @@ ollama pull llama3.2:3b
 cp .env.example .env               # optional for CLI-only usage
 # put your resume at data/master_resume.txt (replace the placeholder)
 python main.py                     # interactive prompts, or pass flags:
-python main.py --keyword "L2 Application Support" --location Hyderabad \
-               --min_salary 6.0 --sites naukri --count 10
+python main.py --keyword "Developer" --location Bengaluru \
+               --min_salary 14.0 --sites naukri --count 10
 ```
 
 To re-export previously stored leads to CSV without scraping:
@@ -275,13 +275,13 @@ replace it with your own. See `sample_resume.txt`, `sample_cover_letter.txt`,
 ```bash
 # Linux/macOS
 source ghost_env/bin/activate
-python main.py --keyword "L2 Application Support" --location Hyderabad \
-               --min_salary 6.0 --sites naukri --count 10
+python main.py --keyword "Developer" --location Bengaluru \
+               --min_salary 14.0 --sites naukri --count 10
 
 # Windows
 ghost_env\Scripts\activate.bat
-python main.py --keyword "L2 Application Support" --location Hyderabad ^
-               --min_salary 6.0 --sites naukri --count 10
+python main.py --keyword "Developer" --location Bengaluru ^
+               --min_salary 14.0 --sites naukri --count 10
 ```
 
 Flags:
@@ -290,7 +290,7 @@ Flags:
 | --------------- | ---------------------------------------------------- |
 | `--keyword`     | Job role / search keyword                            |
 | `--location`    | Target location                                       |
-| `--min_salary`  | Minimum salary in LPA (e.g. `6.0`)                    |
+| `--min_salary`  | Minimum salary in LPA (e.g. `14.0`)                    |
 | `--sites`       | `naukri`, `glassdoor`, `indeed`, `foundit`, or `all` |
 | `--count`       | Jobs to scan per site                                 |
 | `--interactive` | Force guided prompts for every option                |
@@ -360,7 +360,7 @@ Each row records what was collected per lead:
 | ---------- | -------------------- | ------------------------------------------------ |
 | `id`       | `data/leads.csv`     | `naukri_0_919876543210`                          |
 | `company`  | `data/leads.csv`     | `Example Company A`                              |
-| `title`    | `data/leads.csv`     | `L2 Application Support`                         |
+| `title`    | `data/leads.csv`     | `Developer`                         |
 | `phone`    | `data/leads.csv`     | `919876543210` (Indian format, country-prefixed) |
 | `email`    | `data/leads.csv`     | `recruiter1@example.com`                         |
 | `url`      | `data/leads.csv`     | `https://www.naukri.com/example-job-listing`     |
@@ -370,9 +370,9 @@ Sample `data/leads.csv` (also see `sample_leads.csv`):
 
 ```csv
 id,company,title,phone,email,url,status
-naukri_0_919876543210,Example Company A,L2 Application Support,919876543210,recruiter1@example.com,https://www.naukri.com/example-job-listing,CONTACTED
+naukri_0_919876543210,Example Company 'Developer,919876543210,recruiter1@example.com,https://www.naukri.com/example-job-listing,CONTACTED
 naukri_1_recruiter2@example.com,Example Company B,Application Engineer,,recruiter2@example.com,https://www.naukri.com/example-job-listing,CONTACTED
-naukri_2_919876000003,Example Company C,Support Analyst,919876000003,,https://www.naukri.com/example-job-listing,NEW
+naukri_2_919876000003,Example Company C,SQL,911111000003,,https://www.naukri.com/example-job-listing,NEW
 ```
 
 The full DB schema (`core/ghost_protocol.db` → table `leads`) also tracks
