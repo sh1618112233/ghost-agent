@@ -1,6 +1,35 @@
 # Ghost Agent
 
 ## Overview
+## Architecture
+
+```mermaid
+flowchart TD
+
+    U[User]
+
+    U --> CLI[CLI]
+    U --> TG[Telegram Bot]
+
+    CLI --> MAIN[main.py]
+    TG --> BOT[telegram_agent.py]
+
+    MAIN --> SCRAPER[Scraper Service]
+    BOT --> SCRAPER
+
+    SCRAPER --> PLAY[Playwright]
+
+    PLAY --> NAUKRI[Naukri]
+    PLAY --> INDEED[Indeed - Planned]
+    PLAY --> GLASSDOOR[Glassdoor - Planned]
+    PLAY --> FOUNDIT[Foundit - Planned]
+
+    SCRAPER --> EXTRACTOR[Extractor]
+    EXTRACTOR --> RESUME[Resume Tailor]
+
+    RESUME --> DB[(SQLite Database)]
+    EXTRACTOR --> CSV[CSV Reports]
+```
 
 Ghost Agent is an AI-assisted **job discovery and application workflow automation**
 platform. It scrapes job listings from supported platforms, uses a **locally-running
