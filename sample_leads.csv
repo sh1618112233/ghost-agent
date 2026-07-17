@@ -1,0 +1,4 @@
+id,company,title,phone,email,url
+naukri_0_910000000001,Example Company A,Example Service Desk Role,910000000001,recruiter1@example.com,https://www.naukri.com/example-job-listing
+naukri_1_recruiter2@example.com,Example Company B,Example Team Lead Role,,recruiter2@example.com,https://www.naukri.com/example-job-listing
+naukri_2_910000000003,Example Company C,Example Support Engineer,910000000003,,https://www.naukri.com/example-job-listing

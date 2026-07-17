@@ -1,0 +1,28 @@
+{
+  "telegram": {
+    "bot_token": "your_telegram_bot_token_here",
+    "chat_id": "your_chat_id_here"
+  },
+  "ai": {
+    "model_name": "llama3.2:3b",
+    "ollama_url": "http://localhost:11434/api/generate"
+  },
+  "scraping": {
+    "default_keyword": "L2 Application Support",
+    "default_location": "Hyderabad",
+    "default_min_lpa": 6.0,
+    "default_sites": ["naukri"],
+    "default_count": 10
+  },
+  "outreach": {
+    "whatsapp_enabled": true,
+    "email_fallback_enabled": true,
+    "smtp_host": "smtp.gmail.com",
+    "smtp_port": 587
+  },
+  "browser": {
+    "channel": "auto",
+    "headless": false,
+    "anti_detection": true
+  }
+}

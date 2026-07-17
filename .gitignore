@@ -1,0 +1,69 @@
+# ---------- Secrets & environment ----------
+.env
+.env.local
+.env.production
+.env.*.local
+*.env
+secrets.json
+credentials.json
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+
+# ---------- Python ----------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ghost_env/
+.venv/
+ENV/
+build/
+dist/
+*.egg-info/
+.eggs/
+pip-log.txt
+pip-delete-this.txt
+
+# ---------- Project runtime data (never commit) ----------
+# Browser profiles (cookies, sessions, login data, cache)
+data/web_session/
+# SQLite databases (stored leads / job data)
+core/ghost_protocol.db
+*.db
+*.sqlite
+*.sqlite3
+# Generated tailored output & reports
+data/tailored_outputs/
+# Reviewable lead export (contains real recruiter PII)
+data/leads.csv
+data/exports/
+# Log files
+logs/
+*.log
+
+# ---------- OS / Editor noise ----------
+.DS_Store
+Thumbs.db
+desktop.ini
+*.lnk
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ---------- Capture / artifacts ----------
+*.png
+*.jpg
+*.jpeg
+*.mp4
+*.gif
+screenshots/
+recordings/
+downloads/

@@ -1,0 +1,28 @@
+JANE DOE
+City, Country | +00 00000 00000 | jane.doe@example.com
+
+PROFESSIONAL SUMMARY
+IT Support & Application Support Analyst with 4+ years of experience across L1/L2
+support, ticketing, incident management, application support, user access management,
+and troubleshooting.
+
+EXPERIENCE
+Application Support Analyst - Example Company A (Nov 2021 - Present)
+- Provided L2 support for audit applications.
+- Documented incidents, performed RCA, and ensured SLA compliance.
+
+Level 1 Analyst - Example Company C (Sep 2019 - May 2021)
+- Resolved technical issues via calls, chats, and emails.
+
+EDUCATION
+B.Tech - Example Engineering, Example University
+
+TECHNICAL SKILLS
+Windows, Linux, macOS
+ServiceNow, Active Directory, Office 365
+
+PROFESSIONAL SKILLS
+SLA-driven support - Ticket management - Troubleshooting - Communication
+
+ADDITIONAL DETAILS
+Languages: English

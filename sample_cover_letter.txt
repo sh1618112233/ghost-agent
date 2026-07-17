@@ -1,0 +1,29 @@
+JANE DOE
+City, Country | +00 00000 00000 | jane.doe@example.com
+
+Dear Hiring Manager,
+
+I am writing to express my interest in the Application Support Analyst position
+advertised on your careers page. With over four years of hands-on L1/L2 application
+support experience, including incident management, root-cause analysis, and SLA-driven
+ticket resolution, I am confident I would contribute meaningfully to your team.
+
+In my current role at Example Company A, I provide L2 support for audit applications
+spanning engagement creation through long-term archival. I regularly perform RCA on
+production incidents, document runbooks, and coordinate escalations across engineering
+teams to ensure error-free archiving and sustained SLA compliance.
+
+I am comfortable across Windows, Linux, and macOS environments and have hands-on
+experience with ServiceNow, Remedy, Active Directory, and Office 365. I pride myself on
+clear communication, methodical troubleshooting, and a calm, structured approach to
+high-pressure incidents.
+
+I would welcome the opportunity to discuss how my background aligns with your needs.
+Thank you for considering my application; I have attached my resume for your review.
+
+Best regards,
+Jane Doe
+
+---
+This is a fictional sample cover letter for Ghost Agent. Replace the placeholder
+details above with your own before use.
