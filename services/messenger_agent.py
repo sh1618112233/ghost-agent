@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import json
+from dataclasses import dataclass
 import httpx
 import re
 import urllib.parse
@@ -11,6 +12,12 @@ from core.config import SESSION_DIR, browser_launch_kwargs, MODEL_NAME, OLLAMA_U
 from dotenv import load_dotenv
 
 load_dotenv()
+
+@dataclass
+class OutreachResult:
+    success: bool
+    status: str
+    reason: str
 
 async def score_job_alignment(jd_text: str, resume_text: str) -> int:
     """Uses local AI to evaluate fit, truncates text for speed, and forces hard prints."""
@@ -103,54 +110,76 @@ async def send_email_fallback(target_email: str, job_title: str):
         logging.error(f"    [-] Email fallback failed: {e}")
         return False
 
-async def deploy_outreach_loop(lead_id: str, phone: str, title: str, email: str = None):
-    """Physically opens WhatsApp Web and sends the initial outreach message."""
+async def deploy_outreach_loop(lead_id: str, phone: str, title: str, email: str = None) -> OutreachResult:
+    """Opens WhatsApp Web, attempts to send the outreach message, and returns the outcome.
+
+    Does not write to the database. The caller must persist result.status via
+    update_lead_status(). Possible statuses: CONTACTED, INVALID_NUMBER,
+    NO_PHONE, SEND_FAILED.
+    """
     if not phone:
         logging.info("    [*] No phone number found. Triggering Email Waterfall Protocol.")
-        if email: 
+        if email:
             await send_email_fallback(email, title)
-        return
+        return OutreachResult(False, "NO_PHONE", "No phone number found for the lead")
 
     logging.info(f"[*] Attempting WhatsApp Outreach for {phone}...")
-    
+
     message = f"Hi! I saw you are recruiting for the {title} position.Is the position available?"
     encoded_message = urllib.parse.quote(message)
     whatsapp_url = f"https://web.whatsapp.com/send?phone={phone}&text={encoded_message}"
 
-    async with async_playwright() as p:
-        context = await p.chromium.launch_persistent_context(
-            user_data_dir=SESSION_DIR / "whatsapp_profile",
-            **browser_launch_kwargs()
-        )
-        
-        page = await context.new_page()
-        
-        try:
-            logging.info("    ? Loading WhatsApp Web interface...")
-            await page.goto(whatsapp_url, timeout=60000)
-            
+    result = OutreachResult(False, "SEND_FAILED", "Outcome not determined")
+
+    try:
+        async with async_playwright() as p:
+            context = await p.chromium.launch_persistent_context(
+                user_data_dir=SESSION_DIR / "whatsapp_profile",
+                **browser_launch_kwargs()
+            )
+            page = await context.new_page()
             try:
-                send_button = page.locator("button[aria-label='Send'], span[data-icon='send']")
-                await send_button.wait_for(state="visible", timeout=45000)
-                
-                await asyncio.sleep(2)
-                await send_button.click()
-                logging.info(f"    [? SUCCESS] WhatsApp message successfully delivered to {phone}!")
-                await asyncio.sleep(3) 
-                
-            except Exception:
-                invalid_dialog = page.locator("text='Phone number shared via url is invalid'")
-                if await invalid_dialog.count() > 0:
-                    logging.warning(f"    [-] Number {phone} is not registered on WhatsApp.")
-                    if email:
-                        logging.info("    [*] Triggering Email Waterfall Protocol...")
-                        await send_email_fallback(email, title)
-                else:
-                    logging.error("    [-] Timed out waiting for WhatsApp to load. (Did you scan the QR code?)")
-                    
-        except Exception as e:
-            logging.error(f"    [-] WhatsApp navigation error: {e}")
-            
-        finally:
-            await page.close()
-            await context.close()
+                logging.info("    ? Loading WhatsApp Web interface...")
+                await page.goto(whatsapp_url, timeout=60000)
+
+                try:
+                    send_button = page.locator("button[aria-label='Send'], span[data-icon='send']")
+                    await send_button.wait_for(state="visible", timeout=45000)
+
+                    await asyncio.sleep(2)
+                    await send_button.click()
+                    logging.info(f"    [? SUCCESS] WhatsApp message successfully delivered to {phone}!")
+                    await asyncio.sleep(3)
+                    result = OutreachResult(True, "CONTACTED", f"Message sent to {phone}")
+
+                except Exception:
+                    invalid_dialog = page.locator("text='Phone number shared via url is invalid'")
+                    if await invalid_dialog.count() > 0:
+                        logging.warning(f"    [-] Number {phone} is not registered on WhatsApp.")
+                        if email:
+                            logging.info("    [*] Triggering Email Waterfall Protocol...")
+                            await send_email_fallback(email, title)
+                        result = OutreachResult(False, "INVALID_NUMBER", f"{phone} not registered on WhatsApp")
+                    else:
+                        logging.error("    [-] Timed out waiting for WhatsApp to load. (Did you scan the QR code?)")
+                        result = OutreachResult(False, "SEND_FAILED", "Timed out waiting for WhatsApp to load (QR scan or send button missing)")
+
+            except Exception as e:
+                logging.error(f"    [-] WhatsApp navigation error: {e}")
+                result = OutreachResult(False, "SEND_FAILED", f"Navigation error: {e}")
+
+            finally:
+                try:
+                    await page.close()
+                except Exception:
+                    pass
+                try:
+                    await context.close()
+                except Exception:
+                    pass
+
+    except Exception as e:
+        logging.error(f"    [-] WhatsApp browser launch error: {e}")
+        result = OutreachResult(False, "SEND_FAILED", f"Browser/Playwright crash: {e}")
+
+    return result

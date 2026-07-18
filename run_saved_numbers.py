@@ -29,8 +29,8 @@ async def blast_saved_leads():
         lead_id, company, title, phone, email, url, status = tuple(row)
         logging.info(f"[*] Firing outreach for: {company} - {title} (phone={phone or 'none'}, email={email or 'none'})")
         try:
-            await deploy_outreach_loop(lead_id, phone, title, email=email)
-            update_lead_status(lead_id, "RECONTACTED")
+            result = await deploy_outreach_loop(lead_id, phone, title, email=email)
+            update_lead_status(lead_id, result.status)
             logging.info("[*] Waiting 90 seconds before the next contact...")
             await asyncio.sleep(90)
         except Exception as e:

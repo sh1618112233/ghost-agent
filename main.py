@@ -93,8 +93,8 @@ async def main():
             score, reasoning = await score_job_alignment(lead["jd_text"], master_resume)
             if score >= 5:
                 insert_lead(lead["id"], lead["company"], lead["title"], lead.get("phone"), lead.get("email"), lead.get("url"))
-                await deploy_outreach_loop(lead["id"], lead.get("phone"), lead["title"], lead.get("email"))
-                update_lead_status(lead["id"], "CONTACTED")
+                result = await deploy_outreach_loop(lead["id"], lead.get("phone"), lead["title"], lead.get("email"))
+                update_lead_status(lead["id"], result.status)
                 await asyncio.sleep(90)
 
     out = export_leads()
