@@ -6,29 +6,18 @@
 ```mermaid
 flowchart TD
 
-    U[User]
-
-    U --> CLI[CLI]
-    U --> TG[Telegram Bot]
-
-    CLI --> MAIN[main.py]
-    TG --> BOT[telegram_agent.py]
-
-    MAIN --> SCRAPER[Scraper Service]
-    BOT --> SCRAPER
-
-    SCRAPER --> PLAY[Playwright]
-
-    PLAY --> NAUKRI[Naukri]
-    PLAY --> INDEED[Indeed - Planned]
-    PLAY --> GLASSDOOR[Glassdoor - Planned]
-    PLAY --> FOUNDIT[Foundit - Planned]
-
-    SCRAPER --> EXTRACTOR[Extractor]
-    EXTRACTOR --> RESUME[Resume Tailor]
-
-    RESUME --> DB[(SQLite Database)]
-    EXTRACTOR --> CSV[CSV Reports]
+    U[User] --> CLI[CLI / Telegram]
+    CLI --> GA[Ghost Agent]
+    GA --> SCRAPER[Job Scraper]
+    SCRAPER --> MATCH[Resume Matching]
+    MATCH --> EXTRACT[Recruiter Contact Extraction]
+    EXTRACT --> MSG[Messenger Agent]
+    MSG --> WA[WhatsApp Web - Playwright]
+    MSG -. fallback .-> EMAIL[Email - SMTP]
+    WA --> STATUS[Lead Status Update]
+    EMAIL --> STATUS
+    STATUS --> DB[(SQLite Database)]
+    STATUS --> CSV[CSV Export]
 ```
 
 Ghost Agent is an AI-assisted **job discovery and application workflow automation**
@@ -49,17 +38,21 @@ keeping full control of their data and outreach.
 
 ## Features
 
-- **Job scraping** with Playwright-driven, human-like browsing (random delays, popup
-  dismissal, anti-automation flags).
+- **Automated Job Discovery** — Playwright-driven scraping with human-like browsing
+  (random delays, popup dismissal, anti-automation flags).
 - **Salary filtering** — skips listings below a minimum LPA you specify.
-- **Local AI fit-scoring** via Ollama so your data never leaves your machine.
-- **Outreach waterfall** — sends a WhatsApp message when a phone number is available,
-  and falls back to email when only an email address is found.
-- **Two usage modes** — a CLI (`main.py`) and a Telegram bot (`telegram_agent.py`).
-  Telegram is optional; you can use the whole project without it.
-- **Lead persistence** in a local SQLite database with de-duplication and a per-lead
-  status column.
-- **CSV export** of all stored leads to `data/leads.csv` for manual review.
+- **Resume Matching** — a locally-running Ollama LLM scores how well each role fits
+  your resume (1–10); your data never leaves your machine.
+- **Recruiter Contact Extraction** — phone and email parsed from each listing.
+- **WhatsApp Outreach** — sends a WhatsApp Web message per lead; falls back to email
+  when no phone is available or the number is invalid on WhatsApp.
+- **Persistent WhatsApp Sessions** — the WhatsApp Web login is stored in a browser
+  profile and reused across runs; scan the QR only once.
+- **Lead Tracking** — leads persist in a local SQLite database with de-duplication
+  and a per-lead status column.
+- **CSV Export** — all stored leads export to `data/leads.csv` for manual review.
+- **Telegram Control** — drive the agent from a Telegram bot (`telegram_agent.py`);
+  the CLI (`main.py`) also works without Telegram.
 - **Persistent logging** to both the console and `logs/ghost_agent.log`.
 - **Cross-platform** — works on Windows, Linux, and macOS.
 
@@ -116,19 +109,36 @@ ghost_agent/
 └── requirements.txt
 ```
 
-**Workflow / data flow:**
+**Workflow / runtime flow:**
 
-1. **Scrape** — `scraper.py` opens a persistent browser profile, paginates listings,
-   skips low-salary cards, navigates into each job, and extracts a phone/email contact.
-2. **De-duplicate** — each candidate lead is checked against the SQLite DB (by id, phone,
-   and email) before any work is done.
-3. **Score** — `messenger_agent.score_job_alignment()` asks the local Ollama model to
-   rate the job against your resume (1–10) and to explain its reasoning.
-4. **Store** — leads scoring `>= 5` are inserted into SQLite.
-5. **Outreach** — `deploy_outreach_loop()` sends a WhatsApp message; if no phone number
-   is available (or the number is invalid on WhatsApp), it falls back to email.
-6. **Export** — the leads table is exported to `data/leads.csv` for manual review, and
-   everything is logged to `logs/ghost_agent.log`.
+```
+User
+  ↓
+Job Search
+  ↓
+Resume Matching
+  ↓
+Recruiter Contact Extraction
+  ↓
+WhatsApp Outreach
+  ↓
+Lead Status Update
+```
+
+1. **Job Search** — `scraper.py` opens a persistent Playwright browser profile, paginates
+   listings, skips low-salary cards, and navigates into each job. Each candidate lead is
+   de-duplicated against the SQLite DB (by id, phone, email) before any further work.
+2. **Resume Matching** — `messenger_agent.score_job_alignment()` asks the local Ollama
+   model to rate the job against your resume (1–10) and explain its reasoning. Leads
+   scoring `>= 5` proceed.
+3. **Recruiter Contact Extraction** — phone and email contacts are parsed from each
+   listing during scraping and stored as lead fields.
+4. **WhatsApp Outreach** — `deploy_outreach_loop()` opens WhatsApp Web via a persistent
+   Playwright profile and sends the outreach message; if no phone is available or the
+   number is invalid on WhatsApp, it falls back to email.
+5. **Lead Status Update** — the resulting status (`CONTACTED`, `INVALID_NUMBER`,
+   `NO_PHONE`, or `SEND_FAILED`) is written to the SQLite DB, and the leads table is
+   exported to `data/leads.csv`. Everything is logged to `logs/ghost_agent.log`.
 
 **Storage:**
 
@@ -268,6 +278,58 @@ Put your resume at **`data/master_resume.txt`**. A fictional placeholder is incl
 replace it with your own. See `sample_resume.txt`, `sample_cover_letter.txt`,
 `sample_leads.csv`, and `sample_config.json` for safe example data.
 
+## WhatsApp Setup
+
+Outreach runs over **WhatsApp Web** driven by Playwright. The first run needs a
+one-time QR scan; afterwards the session is reused.
+
+### Prerequisites
+
+- **Playwright** with Chromium installed:
+  ```bash
+  playwright install chromium
+  ```
+  On Debian/Ubuntu also install its system libraries:
+  ```bash
+  sudo playwright install-deps chromium
+  ```
+
+### First-time QR scan
+
+1. Run with a **visible** browser window (`HEADLESS=false`, the default):
+   ```bash
+   python main.py --keyword "Developer" --location Bengaluru \
+                  --min_salary 14.0 --sites naukri --count 10
+   ```
+2. When the Chromium window opens to `web.whatsapp.com`, scan the WhatsApp Web QR
+   code with your phone.
+3. The session is saved to a persistent browser profile and reused on subsequent
+   runs — no re-scan needed.
+
+On a headless server, either run behind `xvfb` (`xvfb-run python main.py ...`) or do
+this one-time scan on a desktop machine (which persists the session profile), then
+set `HEADLESS=true`.
+
+### Persistent profile & session reuse
+
+- The WhatsApp browser profile lives at `data/web_session/whatsapp_profile`
+  (git-ignored). Cookies and the WhatsApp login persist there across runs.
+- A fresh Playwright context is opened and closed for each lead, reusing the same
+  on-disk profile, so you stay logged in without re-scanning the QR.
+- If the profile is deleted or the WhatsApp session expires, scan the QR again.
+
+### Typical execution flow (per lead)
+
+1. `deploy_outreach_loop()` opens WhatsApp Web at
+   `https://web.whatsapp.com/send?phone={phone}&text={message}` using the persistent
+   profile.
+2. It waits for the Send button to appear. If WhatsApp never loads in time (QR not
+   scanned or load timeout), the lead is marked `SEND_FAILED`.
+3. It clicks **Send**. On success the lead is marked `CONTACTED`.
+4. If WhatsApp reports the number as invalid, the lead is marked `INVALID_NUMBER`
+   and email fallback fires when an email was captured.
+5. The browser context is closed; the next lead reuses the persisted profile.
+
 ## Usage
 
 ### CLI mode (no Telegram)
@@ -364,19 +426,31 @@ Each row records what was collected per lead:
 | `phone`    | `data/leads.csv`     | `919876543210` (Indian format, country-prefixed) |
 | `email`    | `data/leads.csv`     | `recruiter1@example.com`                         |
 | `url`      | `data/leads.csv`     | `https://www.naukri.com/example-job-listing`     |
-| `status`   | `data/leads.csv`     | `NEW` / `CONTACTED` / `RECONTACTED`              |
+| `status`   | `data/leads.csv`     | `NEW` / `CONTACTED` / `INVALID_NUMBER` / `NO_PHONE` / `SEND_FAILED` |
 
 Sample `data/leads.csv` (also see `sample_leads.csv`):
 
 ```csv
 id,company,title,phone,email,url,status
-naukri_0_919876543210,Example Company 'Developer,919876543210,recruiter1@example.com,https://www.naukri.com/example-job-listing,CONTACTED
+naukri_0_919876543210,Example Company A,Developer,919876543210,recruiter1@example.com,https://www.naukri.com/example-job-listing,CONTACTED
 naukri_1_recruiter2@example.com,Example Company B,Application Engineer,,recruiter2@example.com,https://www.naukri.com/example-job-listing,CONTACTED
 naukri_2_919876000003,Example Company C,SQL,911111000003,,https://www.naukri.com/example-job-listing,NEW
 ```
 
 The full DB schema (`core/ghost_protocol.db` → table `leads`) also tracks
 `human_intervention_required`, `created_at`, and `updated_at`.
+
+### Lead statuses
+
+The `status` column records the outcome of each outreach attempt:
+
+| Status            | Meaning                                                                                |
+| ----------------- | -------------------------------------------------------------------------------------- |
+| `NEW`             | Lead stored; outreach has not yet been attempted.                                      |
+| `CONTACTED`       | WhatsApp send action completed successfully. Not a delivery receipt — it does not confirm the message was delivered to or read by the recipient. |
+| `INVALID_NUMBER`  | WhatsApp reported the phone number as invalid. Email fallback fires if an email was captured. |
+| `NO_PHONE`        | No phone number was captured for the lead. Email fallback fires if an email was captured. |
+| `SEND_FAILED`     | Outreach failed (WhatsApp not loaded in time, QR not scanned, navigation, or browser error). |
 
 ## Troubleshooting
 
@@ -417,6 +491,12 @@ The full DB schema (`core/ghost_protocol.db` → table `leads`) also tracks
   rough scores.
 - Outreach pacing includes fixed delays to reduce blocking risk; high-volume automated
   messaging is not endorsed and may violate platform terms.
+- **No WhatsApp reply tracking** — inbound replies are not read or stored.
+- **No delivery confirmation** — `CONTACTED` means the send action completed, not that
+  the message was delivered or read.
+- **No conversation history** — per-lead chat history is not captured.
+- **No automatic retries** — a failed send stays `SEND_FAILED` until you re-run outreach
+  manually (e.g. via `run_saved_numbers.py`).
 
 ## Roadmap
 
