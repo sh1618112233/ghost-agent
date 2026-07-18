@@ -2,12 +2,12 @@ JANE DOE
 City, Country | +00 00000 00000 | jane.doe@example.com
 
 PROFESSIONAL SUMMARY
-IT Support & Application Support Analyst with 4+ years of experience across L1/L2
+IT Support & Developer Analyst with 4+ years of experience across L1/L2
 support, ticketing, incident management, application support, user access management,
 and troubleshooting.
 
 EXPERIENCE
-Application Support Analyst - Example Company A (Nov 2021 - Present)
+Developer Analyst - Example Company A (Nov 2021 - Present)
 - Provided L2 support for audit applications.
 - Documented incidents, performed RCA, and ensured SLA compliance.
 

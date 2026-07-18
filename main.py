@@ -57,7 +57,7 @@ async def main():
             return val
         return input(prompt).strip() or default
 
-    keyword = arg_or_prompt(args.keyword, "? Job Role/Keyword (Enter for 'L2 Application Support'): ", "L2 Application Support")
+    keyword = arg_or_prompt(args.keyword, "? Job Role/Keyword (Enter for 'Developer'): ", "Developer")
     location = arg_or_prompt(args.location, "? Target Location (Enter for 'Hyderabad'): ", "Hyderabad")
 
     raw_sal = arg_or_prompt(args.min_salary, "? Minimum Salary in LPA? (Default: 6.0): ", "6.0")

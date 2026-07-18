@@ -25,7 +25,7 @@ async def start_hunt(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def get_keyword(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
-    context.user_data['keyword'] = "L2 Application Support" if text.lower() == 'default' else text
+    context.user_data['keyword'] = "Developer" if text.lower() == 'default' else text
     await update.message.reply_text("? Type the Target Location (or type 'default'):")
     return LOCATION
 

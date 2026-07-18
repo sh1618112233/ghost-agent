@@ -8,7 +8,7 @@
     "ollama_url": "http://localhost:11434/api/generate"
   },
   "scraping": {
-    "default_keyword": "L2 Application Support",
+    "default_keyword": "Developer",
     "default_location": "Hyderabad",
     "default_min_lpa": 6.0,
     "default_sites": ["naukri"],

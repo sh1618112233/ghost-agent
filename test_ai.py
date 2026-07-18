@@ -19,7 +19,7 @@ async def test_the_ai():
     }
     
     Job Description: We need a Python developer with 5 years of AWS experience.
-    Resume: I am an L2 Application Support engineer with ServiceNow experience.
+    Resume: I am an Developer engineer with ServiceNow experience.
     """
     
     payload = {"model": MODEL_NAME, "prompt": prompt, "stream": False, "format": "json"}

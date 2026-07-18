@@ -3,7 +3,7 @@ City, Country | +00 00000 00000 | jane.doe@example.com
 
 Dear Hiring Manager,
 
-I am writing to express my interest in the Application Support Analyst position
+I am writing to express my interest in the Developer Analyst position
 advertised on your careers page. With over four years of hands-on L1/L2 application
 support experience, including incident management, root-cause analysis, and SLA-driven
 ticket resolution, I am confident I would contribute meaningfully to your team.
